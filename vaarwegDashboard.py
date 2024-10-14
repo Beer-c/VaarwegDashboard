@@ -9,10 +9,10 @@ Dashboard vaarwegtellingen
 
 import streamlit as st
 import pandas as pd
-import folium
-from streamlit_folium import st_folium
+#import folium
+#from streamlit_folium import st_folium
 import numpy as np
-import altair as alt
+
 
 APP_TITLE = 'Vaarwegtellingen'
 APP_SUBTITLE = 'Provincie Zuid-Holland'

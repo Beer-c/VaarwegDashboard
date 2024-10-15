@@ -31,26 +31,17 @@ def display_tijd_filters():
     t_interval = st.sidebar.radio('Periode',['maand','seizoen','dagsoort','dagdeel'])
     return jaar, t_interval
 
-def display_dataframe(df, Xas, Zas, titel):
+def display_grafiek_totaal(df, Xas, Zas, tabel):
        
     df_group = pd.DataFrame({'count' : df.groupby( [Xas, Zas] ).size()}).reset_index()
-    
-    kolommen = df_group.columns.to_list() 
-    if 'seizoen' in kolommen:
-        df_group.seizoen = df_group.seizoen.replace([0, 1, 2, 3, 4], seizoen_lijst)
-    if 'maand' in kolommen:
-        df_group.maand = df_group.maand.replace([1, 2, 3, 4, 5, 6,7, 8, 9, 10, 11, 12], maand_lijst)
-    if 'dagsoort' in kolommen:
-        df_group.dagsoort = df_group.dagsoort.replace(['WD','WK'], dagsoort_lijst)
-    if 'dagdeel' in kolommen:
-        df_group.dagdeel = df_group.dagdeel.replace([0,1,2], dagdeel_lijst)
-    if 'vaart' in kolommen:
-        df_group.vaart = df_group.vaart.replace(['B','R'], vaart_lijst)
-    if 'direction' in kolommen:
-        df_group.direction = df_group.direction.replace(['D','U'], richting_lijst)
-     
-    #st.dataframe(df_group)
+    df_group = legenda(df_group)
     st.bar_chart(df_group, x= Xas, y= 'count', y_label= 'totaal aantal schepen', color = Zas, stack=False)
+    
+def display_grafiek_gem(df, Xas, Zas, tabel):
+    
+    if (Xas == 'dagdeel') or (Xas=='dagsoort'):
+        st.write('van dagdeel en dagsoort wordt geen gemiddelde berekend')
+        return
     
     aantal_pods = len(df.pod.unique())
     
@@ -79,7 +70,7 @@ def display_dataframe(df, Xas, Zas, titel):
     
    # groepeer per tijdsinterval het aantal schepen, het aantal gemeten dagen en bereken het gemiddelde hiervan
     df_group_sel = pd.DataFrame({'count' : df_sel.groupby( [Xas, Zas] ).size()}).reset_index()
-    
+        
     if Xas == 'maand':
         df_group_sel['meetdagen']=df_group_sel.maand
         df_group_sel['meetdagen'] = df_group_sel.meetdagen.replace(df_months['maand'].to_list(), df_months['count'].to_list())
@@ -89,6 +80,8 @@ def display_dataframe(df, Xas, Zas, titel):
 
     df_group_sel['daggem'] = (df_group_sel['count'] / df_group_sel['meetdagen']).astype(int)
 
+    
+    df_group_sel = legenda(df_group_sel)
     st.bar_chart(df_group_sel, x= Xas, y= 'daggem', y_label= ' gem aantal schepen per dag', color = Zas, stack=False)
 
 def pod_kleur(val):
@@ -121,11 +114,26 @@ def display_pod_data(df, bridge_id, jaar):
                 
             with cols[col]:
                 st.write('boat sense pod: ',pod)
-                st.dataframe(df_kalender.style.map(pod_kleur))
+                st.dataframe(df_kalender.style.map(pod_kleur), height=800)
                 
             col+=1
             
-
+def legenda(df_group):
+    kolommen = df_group.columns.to_list() 
+    if 'seizoen' in kolommen:
+        df_group.seizoen = df_group.seizoen.replace([0, 1, 2, 3, 4], seizoen_lijst)
+    if 'maand' in kolommen:
+        df_group.maand = df_group.maand.replace([1, 2, 3, 4, 5, 6,7, 8, 9, 10, 11, 12], maand_lijst)
+    if 'dagsoort' in kolommen:
+        df_group.dagsoort = df_group.dagsoort.replace(['WD','WK'], dagsoort_lijst)
+    if 'dagdeel' in kolommen:
+        df_group.dagdeel = df_group.dagdeel.replace([0,1,2], dagdeel_lijst)
+    if 'vaart' in kolommen:
+        df_group.vaart = df_group.vaart.replace(['B','R'], vaart_lijst)
+    if 'direction' in kolommen:
+        df_group.direction = df_group.direction.replace(['D','U'], richting_lijst)
+    st.write(df_group)
+    return df_group
 
 def main():
     st.set_page_config(APP_TITLE, layout='wide')
@@ -135,7 +143,7 @@ def main():
     # display filters in sidebar
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
-        
+            
     # maak de selectie van metingen
     df = df_counts[(df_counts['bridge_id']==bridge_id) & (df_counts.index.year==jaar)]
     
@@ -144,12 +152,18 @@ def main():
     with col1:
         display_metrics('brug', bridge_name)
         st.caption('verdeling beroepsvaart / recreatievaart totaal')
-        display_dataframe(df, t_interval, 'vaart','')
+        display_grafiek_totaal(df, t_interval, 'vaart','')
+        st.caption('verdeling beroepsvaart / recreatievaart gem per dag')
+        display_grafiek_gem(df, t_interval, 'vaart', "")
     with col2:
         display_metrics('jaar', jaar)
         st.caption('verdeling stroomafwaarts / stroomopwaarts totaal')
-        display_dataframe(df, t_interval, 'direction','')
+        display_grafiek_totaal(df, t_interval, 'direction', "")
+        st.caption('verdeling stroomafwaarts / stroomopwaarts gem per dag')
+        display_grafiek_gem(df, t_interval, 'direction','')
     
+    link = df_brug.loc[df_brug['id']==bridge_id].link.to_list()
+    st.sidebar.image(link[0])
     st.sidebar.metric('vaartuigen', df.shape[0])
        
     display_pod_data(df, bridge_id, jaar)

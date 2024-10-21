@@ -26,63 +26,64 @@ def display_brug(df_brug):
     return int(bridge_id), bridge_name
     
 def display_tijd_filters():
-    jaar_lijst =[2020, 2021, 2022, 2023, 2024, 2025]
     jaar = st.sidebar.selectbox('Jaar', jaar_lijst,len(jaar_lijst)-1)
-    t_interval = st.sidebar.radio('Periode',['maand','seizoen','dagsoort','dagdeel'])
+    t_interval = st.sidebar.radio('Periode',['maand','seizoen'])
     return jaar, t_interval
 
-def display_grafiek_totaal(df, Xas, Zas, tabel):
-       
-    df_group = pd.DataFrame({'count' : df.groupby( [Xas, Zas] ).size()}).reset_index()
+def display_groepeer():
+    groepeer = st.sidebar.radio('Groepeer totalen bij',['dagsoort','dagdeel','geen'])
+    groepeer = None if groepeer=='geen' else groepeer
+    return groepeer
+
+def display_stack():
+    stack = st.sidebar.radio('Kolommen',['stapelen','naast elkaar'])
+    return (stack=='stapelen')
+
+def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
+    
+    # selecteer de waarnemingen in de goedgekeurde weken
+    df = df[df.vaart==vaart]
+    
+    voorwaarde = [Xas] if Zas is None else [Xas,Zas]   
+    df_group = pd.DataFrame({'count' : df.groupby(voorwaarde).size()}).reset_index()
     df_group = legenda(df_group)
-    st.bar_chart(df_group, x= Xas, y= 'count', y_label= 'totaal aantal schepen', color = Zas, stack=False)
+    #st.write(df_group)
+    st.bar_chart(df_group, x= Xas, y= 'count', y_label= 'totaal aantal schepen', color = Zas, stack=stack)
     
-def display_grafiek_gem(df, Xas, Zas, tabel):
+def display_grafiek_gem(df, Xas, vaart, Zas, stack):
+           
+    # selecteer de waarnemingen in de goedgekeurde weken
+    df = df[df.vaart==vaart]
     
-    if (Xas == 'dagdeel') or (Xas=='dagsoort'):
-        st.write('van dagdeel en dagsoort wordt geen gemiddelde berekend')
-        return
+    # bepaal totaal aantal schepen per maand per WD/WK
+    df_totaal = df[['dagsoort','bridge_id']].groupby(['dagsoort', pd.Grouper(level=0, freq='M')]).agg({'bridge_id':'size'}).reset_index()
     
-    aantal_pods = len(df.pod.unique())
+    # bepaal totaal aantal meetdagen per maand per WD/WK
+    df['datum']= df.index.normalize()
+    df_uniek= df.drop_duplicates(subset=['datum'])
+    df_aantal = df_uniek.groupby(['dagsoort', pd.Grouper(level=0, freq='M')]).agg({'bridge_id':'size'}).reset_index()
+    df_totaal = df_totaal.merge(df_aantal, how='left', on = ['dagsoort','Timestamp'])
+    df_totaal = df_totaal.rename(columns={"bridge_id_x": "totaal", "bridge_id_y": "meetdagen"})
     
-    # maak een lijst van datums waarop alle pods goed geteld hebben.
-    df_group = pd.DataFrame({'count' : df.groupby( [df.index.date,'pod']).size()}).reset_index() # datums waarop een of meer pods geteld hebben.
-    df_group_dates = pd.DataFrame({'count' : df_group.groupby(['level_0']).size()}) # tel hoeveel pods op elke datum geteld hebben.
-    df_group_dates = df_group_dates.loc[df_group_dates['count']==aantal_pods] # selecteer de dagen waarop alle pods geteld hebben.
-    df_group_dates.index = pd.to_datetime(df_group_dates.index)
-    
-    # bepaal het aantal dagen per maand dat goed gemeten is (om straks het gemiddelde te kunnen berekenen)
-    df_months = pd.DataFrame({'count': df_group_dates.index.to_series().resample("M").size()}).reset_index()
-    df_months.index = pd.to_datetime(df_months.level_0)
-    df_months['maand'] = df_months.index.month
-    
-    # bepaal het aantal dagen per seizoen dat goed gemeten is
-    seizoenen = [[1,2,3],[4,5,6],[7,8],[9,10],[11,12]]
-    df_seizoenen =pd.DataFrame(index=np.arange(5), columns=['count'])
-    t=0
-    for seizoen in seizoenen:
-        df_seizoenen.iat[t,0] = df_months['count'].loc[df_months.maand.isin(seizoen)].sum()
-        t+=1
-
-    
-     # selecteer de metingen op de dagen waarop alle pods werkten
-    df_sel = df[df.index.normalize().isin(df_group_dates.index)]
-    
-   # groepeer per tijdsinterval het aantal schepen, het aantal gemeten dagen en bereken het gemiddelde hiervan
-    df_group_sel = pd.DataFrame({'count' : df_sel.groupby( [Xas, Zas] ).size()}).reset_index()
+    # bereken het gemiddelde per maand per WD/WK
+    df_totaal['gem'] = (df_totaal.totaal / df_totaal.meetdagen).astype(int)
+    df_totaal['maand'] = df_totaal.Timestamp.dt.month
         
-    if Xas == 'maand':
-        df_group_sel['meetdagen']=df_group_sel.maand
-        df_group_sel['meetdagen'] = df_group_sel.meetdagen.replace(df_months['maand'].to_list(), df_months['count'].to_list())
-    if Xas =='seizoen':
-        df_group_sel['meetdagen']=df_group_sel.seizoen
-        df_group_sel['meetdagen'] = df_group_sel.meetdagen.replace(df_seizoenen.index.to_list(), df_seizoenen['count'].to_list())
-
-    df_group_sel['daggem'] = (df_group_sel['count'] / df_group_sel['meetdagen']).astype(int)
-
+    # Voeg het seizoen toe per WD/WK
+    df_totaal['seizoen'] = df_totaal['maand']
+    df_totaal['seizoen'] = df_totaal['seizoen'].replace([1,2,3,4,5,6,7,8,9,10,11,12], [0,0,0,1,1,1,2,2,3,3,4,4])
+  
     
-    df_group_sel = legenda(df_group_sel)
-    st.bar_chart(df_group_sel, x= Xas, y= 'daggem', y_label= ' gem aantal schepen per dag', color = Zas, stack=False)
+    if Xas == 'seizoen':
+        df_seizoen = pd.DataFrame({'gem': df_totaal.groupby(['seizoen','dagsoort'])['gem'].mean().astype(int)})
+        df_totaal= df_seizoen.reset_index(level=['seizoen','dagsoort'])
+        
+              
+    df_totaal = legenda (df_totaal)
+    st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
+    df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
+    df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
+    st.write(df_totaal)
 
 def pod_kleur(val):
     color = 'green' if int(val) else 'red'
@@ -102,7 +103,7 @@ def display_pod_data(df, bridge_id, jaar):
         for pod in pods:
             start = str(jaar)+'-01-01'
             end =   str(jaar)+'-12-31'
-            lijst = pd.date_range(start, end).difference(df.index.date)
+            lijst = pd.date_range(start, end).difference(df.index.date)  # lijst dagen waarop een pod niks gemeten heeft
             
             df_kalender = pd.DataFrame(index=np.arange(52), columns=['ma','di','wo','do','vr','za','zo'])
             df_kalender.index.name ='week'
@@ -132,7 +133,7 @@ def legenda(df_group):
         df_group.vaart = df_group.vaart.replace(['B','R'], vaart_lijst)
     if 'direction' in kolommen:
         df_group.direction = df_group.direction.replace(['D','U'], richting_lijst)
-    st.write(df_group)
+    #st.write(df_group,)
     return df_group
 
 def main():
@@ -143,25 +144,42 @@ def main():
     # display filters in sidebar
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
+    groepeer               = display_groepeer()
+    stack                  = display_stack()
             
     # maak de selectie van metingen
     df = df_counts[(df_counts['bridge_id']==bridge_id) & (df_counts.index.year==jaar)]
+    aantal_pods = len(df.pod.unique())
+    
+    # maak een lijst van datums waarop alle pods goed geteld hebben.
+    df_group = pd.DataFrame({'count' : df.groupby( [df.index.date,'pod']).size()}).reset_index() # datums waarop een of meer pods geteld hebben.
+    df_group_dates = pd.DataFrame({'count' : df_group.groupby(['level_0']).size()}) # tel hoeveel pods op elke datum geteld hebben.
+    df_group_dates = df_group_dates.loc[df_group_dates['count']==aantal_pods] # selecteer de dagen waarop alle pods geteld hebben.
+    df_group_dates.index = pd.to_datetime(df_group_dates.index) # stel de datetime index in 
+    df_group_dates['week'] = df_group_dates.index.isocalendar().week 
+    df_weken = pd.DataFrame({'count' : df_group_dates.groupby(['week']).size()})
+    df_weken = df_weken[df_weken>5].dropna() # selecteer de weken waarop 6 of meer dagen geteld is
+    weken_lijst = df_weken.index.to_list()
+    
+    # selecteer de waarnemingen in de goedgekeurde weken
+    df = df[df.index.isocalendar().week.isin(weken_lijst)]
+
     
     # display data in app
     col1, col2 = st.columns(2)
     with col1:
         display_metrics('brug', bridge_name)
-        st.caption('verdeling beroepsvaart / recreatievaart totaal')
-        display_grafiek_totaal(df, t_interval, 'vaart','')
-        st.caption('verdeling beroepsvaart / recreatievaart gem per dag')
-        display_grafiek_gem(df, t_interval, 'vaart', "")
+        st.caption('beroepsvaart totaal')
+        display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
+        st.caption('beroepsvaart daggemiddelde')
+        display_grafiek_gem(df, t_interval, 'B', groepeer, stack)
     with col2:
         display_metrics('jaar', jaar)
-        st.caption('verdeling stroomafwaarts / stroomopwaarts totaal')
-        display_grafiek_totaal(df, t_interval, 'direction', "")
-        st.caption('verdeling stroomafwaarts / stroomopwaarts gem per dag')
-        display_grafiek_gem(df, t_interval, 'direction','')
-    
+        st.caption('recreatievaart totaal')
+        display_grafiek_totaal(df, t_interval, 'R', groepeer, stack)
+        st.caption('recreatievaart daggemiddelde')
+        display_grafiek_gem(df, t_interval, 'R', groepeer, stack)
+            
     link = df_brug.loc[df_brug['id']==bridge_id].link.to_list()
     st.sidebar.image(link[0])
     st.sidebar.metric('vaartuigen', df.shape[0])
@@ -187,6 +205,8 @@ df_brug = df_brug.sort_values(by=['name'])
 
 path = r'./data/tellingen.parquet'
 df_counts = pd.read_parquet(path)
+
+jaar_lijst =df_counts.index.year.unique()
 
  # display het dashboard   
 if __name__ == '__main__':

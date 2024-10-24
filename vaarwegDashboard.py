@@ -9,8 +9,10 @@ Dashboard vaarwegtellingen
 
 import streamlit as st
 import pandas as pd
-#import folium
-#from streamlit_folium import st_folium
+from pyogrio import read_dataframe
+from pyogrio import write_dataframe
+import folium
+from streamlit_folium import st_folium
 import numpy as np
 
 
@@ -21,8 +23,8 @@ def display_metrics(label, value):
     st.metric(label=label+": ", value=value)
     
 def display_brug(df_brug):
-    bridge_name = st.sidebar.selectbox('Brug',df_brug.name,10)
-    bridge_id = df_brug.id.loc[df_brug['name']==bridge_name]
+    bridge_name = st.sidebar.selectbox('Brug',df_brug.bridge_name,10)
+    bridge_id = df_brug.id.loc[df_brug['bridge_name']==bridge_name]
     return int(bridge_id), bridge_name
     
 def display_tijd_filters():
@@ -136,6 +138,37 @@ def legenda(df_group):
     #st.write(df_group,)
     return df_group
 
+# functie kaart met verkeersborden maken en opslaan
+def MaakKaart(gdf_vaarwegen, df_brug):
+  
+    # interactieve kaart maken en opslaan
+    kaart = folium.Map(location=(52.060211, 4.499377), zoom_control=False)
+
+    #bruggen op de kaart zetten
+    brug_icon = 'https://images.trafficsupply.nl/imgfill/800/800/i-114415-2d2/verkeersbord-sb250-a9-beweegbare-brug'
+   
+    for index, row in df_brug.iterrows():
+        tooltip = row['bridge_name']
+        popup = 'hectometer '+str(row['hectometer'])
+        icon = folium.features.CustomIcon(brug_icon, icon_size=(30,30))
+        folium.Marker([row['latitude'], row['longitude']], popup = popup, icon = icon, tooltip = tooltip).add_to(kaart)
+
+    # vaarwegen op de kaart zetten
+    for index, row in gdf_vaarwegen.iterrows():
+        locations = row['Polyline']
+        tooltip = row['tooltip']
+        color = row['color']
+        folium.PolyLine(locations=locations, color=color, weight=5, tooltip=tooltip).add_to(kaart)
+        
+    st.map = st_folium(kaart, width = 700, height = 450)
+
+# functie die x,y omdraait voor de polyline die gebruikt wordt in Folium map
+def switch_LatLon (lijnstringLatLon):
+    x,y = lijnstringLatLon.xy
+    lijnstringLonLat = list(zip(list(y), list(x)))
+    return lijnstringLonLat    
+
+
 def main():
     st.set_page_config(APP_TITLE, layout='wide')
     st.title(APP_TITLE)
@@ -183,9 +216,9 @@ def main():
     link = df_brug.loc[df_brug['id']==bridge_id].link.to_list()
     st.sidebar.image(link[0])
     st.sidebar.metric('vaartuigen', df.shape[0])
-       
+        
     display_pod_data(df, bridge_id, jaar)
-    
+    MaakKaart(gdf_vaarwegen, df_brug)
     
 # start hoofdprogramma
 seizoen_lijst   = ['1   jan-mrt','2   april-juni','3   juli-aug','4   sept-okt','5   nov-dec']
@@ -201,12 +234,23 @@ richting_lijst  = ['stroomafwaarts','stroomopwaarts']
 # load data
 path = r'./data/bruggen.parquet'
 df_brug = pd.read_parquet(path)
-df_brug = df_brug.sort_values(by=['name'])
+df_brug = df_brug.sort_values(by=['bridge_name'])
+
+path = r'./data/vaarwegen/vaarwegenPZH.shp'
+gdf_vaarwegen = read_dataframe(path, use_arrow=True)
 
 path = r'./data/tellingen.parquet'
 df_counts = pd.read_parquet(path)
 
 jaar_lijst =df_counts.index.year.unique()
+
+# bewerk het vaarwegenbestand
+gdf_vaarwegen.crs="EPSG:28992" # bestand heeft RDS coordinaten
+gdf_vaarwegen = gdf_vaarwegen.to_crs(epsg = 4326) # omzetten naar WG84 coordinaten
+gdf_vaarwegen['Polyline'] = gdf_vaarwegen.apply(lambda row: switch_LatLon(row.geometry), axis=1 ) #polylines maken van linestrings
+gdf_vaarwegen['tooltip'] = gdf_vaarwegen.VRT_CODE+'  '+gdf_vaarwegen.VRT_NAAM
+gdf_vaarwegen['color'] = '#0000FF' # kleurcode blauw
+
 
  # display het dashboard   
 if __name__ == '__main__':

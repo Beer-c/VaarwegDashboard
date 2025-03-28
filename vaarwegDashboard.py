@@ -186,7 +186,7 @@ def main():
     aantal_pods = len(df.pod.unique())
     
     # maak een lijst van datums waarop alle pods goed geteld hebben.
-    df_group = pd.DataFrame({'count' : df.groupby( [df.index.date,'pod']).size()}).reset_index() # datums waarop een of meer pods geteld hebben.
+    df_group = pd.DataFrame({'count' : df.groupby( [df.Timestamp.dt.date,'pod']).size()}).reset_index() # datums waarop een of meer pods geteld hebben.
     df_group_dates = pd.DataFrame({'count' : df_group.groupby(['level_0']).size()}) # tel hoeveel pods op elke datum geteld hebben.
     df_group_dates = df_group_dates.loc[df_group_dates['count']==aantal_pods] # selecteer de dagen waarop alle pods geteld hebben.
     df_group_dates.index = pd.to_datetime(df_group_dates.index) # stel de datetime index in 

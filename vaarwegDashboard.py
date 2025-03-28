@@ -181,7 +181,7 @@ def main():
     stack                  = display_stack()
             
     # maak de selectie van metingen
-    df = df_counts[(df_counts['bridge_id']==bridge_id) & (df_counts.index.year==jaar)]
+    df = df_counts[(df_counts['bridge_id']==bridge_id) & (df_counts.Timestamp.dt.year==jaar)]
     aantal_pods = len(df.pod.unique())
     
     # maak een lijst van datums waarop alle pods goed geteld hebben.
@@ -242,7 +242,7 @@ gdf_vaarwegen = read_dataframe(path, use_arrow=True)
 path = r'./data/tellingen.parquet'
 df_counts = pd.read_parquet(path)
 
-jaar_lijst =df_counts.index.year.unique()
+jaar_lijst =df_counts.Timestamp.dt.year.unique()
 
 # bewerk het vaarwegenbestand
 gdf_vaarwegen.crs="EPSG:28992" # bestand heeft RDS coordinaten

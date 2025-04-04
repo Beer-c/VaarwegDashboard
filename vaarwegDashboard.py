@@ -242,7 +242,7 @@ gdf_vaarwegen = read_dataframe(path, use_arrow=True)
 path = r'./data/tellingen.parquet'
 df_counts = pd.read_parquet(path)
 
-jaar_lijst =df_counts.index.year.unique()
+jaar_lijst =df_counts.index.year.unique().sort()
 
 # bewerk het vaarwegenbestand
 gdf_vaarwegen.crs="EPSG:28992" # bestand heeft RDS coordinaten

@@ -28,7 +28,7 @@ def display_brug(df_brug):
     return int(bridge_id), bridge_name
     
 def display_tijd_filters():
-    jaar = st.sidebar.selectbox('Jaar', ['2021', '2022', '2023', '2024', '2025'])
+    jaar = st.sidebar.selectbox('Jaar', [2021, 2022, 2023, 2024, 2025])
     t_interval = st.sidebar.radio('Periode',['maand','seizoen'])
     return jaar, t_interval
 

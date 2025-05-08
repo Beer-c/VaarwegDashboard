@@ -2,7 +2,7 @@
 """
 Created on Fri Oct  4 09:08:52 2024
 
-Dashboard vaarwegtellingen
+Dashboard vaartuigtellingen
 
 @author: Berend Feddes PZH
 """
@@ -16,7 +16,7 @@ from streamlit_folium import st_folium
 import numpy as np
 
 
-APP_TITLE = 'Vaarwegtellingen'
+APP_TITLE = 'Vaartuigtellingen 2022 - 2025'
 APP_SUBTITLE = 'Provincie Zuid-Holland'
 
 def display_metrics(label, value):
@@ -28,12 +28,12 @@ def display_brug(df_brug):
     return int(bridge_id), bridge_name
     
 def display_tijd_filters():
-    jaar = st.sidebar.selectbox('Jaar', [2021, 2022, 2023, 2024, 2025])
+    jaar = st.sidebar.selectbox('Jaar', [2022, 2023, 2024, 2025])
     t_interval = st.sidebar.radio('Periode',['maand','seizoen'])
     return jaar, t_interval
 
 def display_groepeer():
-    groepeer = st.sidebar.radio('Groepeer totalen bij',['dagsoort','dagdeel','geen'])
+    groepeer = st.sidebar.radio('Groepeer totalen bij',['dagdeel','geen'])
     groepeer = None if groepeer=='geen' else groepeer
     return groepeer
 
@@ -178,7 +178,8 @@ def main():
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
     groepeer               = display_groepeer()
-    stack                  = display_stack()
+    #stack                 = display_stack()
+    stack                  = 'stapelen'
             
     # maak de selectie van metingen
     df = df_counts[(df_counts['bridge_id']==bridge_id) & (df_counts.index.year==jaar)]
@@ -202,14 +203,14 @@ def main():
     col1, col2 = st.columns(2)
     with col1:
         display_metrics('brug', bridge_name)
-        st.caption('beroepsvaart totaal')
-        display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
+        # st.caption('beroepsvaart totaal')
+        # display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
         st.caption('beroepsvaart daggemiddelde')
         display_grafiek_gem(df, t_interval, 'B', groepeer, stack)
     with col2:
         display_metrics('jaar', jaar)
-        st.caption('recreatievaart totaal')
-        display_grafiek_totaal(df, t_interval, 'R', groepeer, stack)
+        # st.caption('recreatievaart totaal')
+        # display_grafiek_totaal(df, t_interval, 'R', groepeer, stack)
         st.caption('recreatievaart daggemiddelde')
         display_grafiek_gem(df, t_interval, 'R', groepeer, stack)
             

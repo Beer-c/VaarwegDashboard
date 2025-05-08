@@ -90,7 +90,8 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack, ToonTabel):
     df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
     df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
     
-st.write(df_totaal) if ToonTabel=='ja'
+if ToonTabel=='ja':
+    st.write(df_totaal) 
 
 def pod_kleur(val):
     color = 'green' if int(val) else 'red'

@@ -42,7 +42,7 @@ def display_stack():
     return (stack=='stapelen')
 
 def display_tabel(): 
-    tabel = st.sidebar.radio('tabel',['ja','nee'])
+    tabel = st.sidebar.radio('Tabel',['ja','nee'])
     return (tabel=='ja')
 
 def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
@@ -182,7 +182,7 @@ def main():
     # display filters in sidebar
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
-    groepeer               = display_groepeer()
+    # groepeer              = display_groepeer()
     tabel                  = display_tabel()
     stack                  =  True      # gebruik display_stack() om te kunnen kiezen tussen stapelen en naast elkaar
                 

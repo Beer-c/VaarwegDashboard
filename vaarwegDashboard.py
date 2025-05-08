@@ -196,7 +196,11 @@ def main():
     
     # selecteer de waarnemingen in de goedgekeurde weken
     df = df[df.index.isocalendar().week.isin(weken_lijst)]
-    st.dataframe(df, height=800)
+    df_wd = df.loc[df['dagsoort'] == 'WD']
+    df_wk = df.loc[df['dagsoort'] == 'WK']
+    
+    st.dataframe(df_wd, height=800)
+    st.dataframe(df_wk, height=800)
 
     
     # display data in app

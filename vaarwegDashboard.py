@@ -89,7 +89,7 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack):
     st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
     df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
     df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
-    if tabel:
+    if (tabel==True):
         st.write(df_totaal)
 
 def pod_kleur(val):
@@ -182,7 +182,7 @@ def main():
     # display filters in sidebar
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
-    groepeer               = display_groepeer() 
+    groepeer               = None # display_groepeer() 
     tabel                  = display_tabel()
     stack                  =  True      # gebruik display_stack() om te kunnen kiezen tussen stapelen en naast elkaar
                 

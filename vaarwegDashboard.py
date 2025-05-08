@@ -89,7 +89,7 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack):
     st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
     df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
     df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
-    if tabel=='ja:
+    if tabel=='ja':
         st.write(df_totaal)
 
 def pod_kleur(val):

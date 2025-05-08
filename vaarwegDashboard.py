@@ -217,6 +217,7 @@ def main():
     st.sidebar.image(link[0])
     st.sidebar.metric('vaartuigen', df.shape[0])
         
+    st.dataframe(df)
     display_pod_data(df, bridge_id, jaar)
     MaakKaart(gdf_vaarwegen, df_brug)
     

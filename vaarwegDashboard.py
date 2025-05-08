@@ -39,7 +39,7 @@ def display_groepeer():
 
 def display_stack():
     stack = st.sidebar.radio('Kolommen',['stapelen','naast elkaar'])
-    return (stack=='stapelen')
+    return True # gebruik 'stack' om te kiezen tussen stapelen en naast elkaar
 
 def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     

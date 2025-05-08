@@ -198,25 +198,27 @@ def main():
     df = df[df.index.isocalendar().week.isin(weken_lijst)]
     df_wd = df.loc[df['dagsoort'] == 'WD']
     df_wk = df.loc[df['dagsoort'] == 'WK']
-    
-    st.dataframe(df_wd, height=800)
-    st.dataframe(df_wk, height=800)
-
-    
+            
     # display data in app
     col1, col2 = st.columns(2)
     with col1:
         display_metrics('brug', bridge_name)
         # st.caption('beroepsvaart totaal')
         # display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
-        st.caption('beroepsvaart daggemiddelde')
-        display_grafiek_gem(df, t_interval, 'B', groepeer, stack)
+        st.caption('beroepsvaart werkdaggemiddelde')
+        display_grafiek_gem(df_wd, t_interval, 'B', groepeer, stack)
+        st.caption('beroepsvaart weekendggemiddelde')
+        display_grafiek_gem(df_wk, t_interval, 'B', groepeer, stack)
+    
     with col2:
         display_metrics('jaar', jaar)
         # st.caption('recreatievaart totaal')
         # display_grafiek_totaal(df, t_interval, 'R', groepeer, stack)
-        st.caption('recreatievaart daggemiddelde')
-        display_grafiek_gem(df, t_interval, 'R', groepeer, stack)
+        st.caption('recreatievaart werkdaggemiddelde')
+        display_grafiek_gem(df_wd, t_interval, 'R', groepeer, stack)
+        st.caption('recreatievaart weekendgemiddelde')
+        display_grafiek_gem(df_wk, t_interval, 'R', groepeer, stack)
+        
             
     link = df_brug.loc[df_brug['id']==bridge_id].link.to_list()
     st.sidebar.image(link[0])

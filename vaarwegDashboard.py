@@ -196,6 +196,7 @@ def main():
     
     # selecteer de waarnemingen in de goedgekeurde weken
     df = df[df.index.isocalendar().week.isin(weken_lijst)]
+    st.dataframe(df, height=800)
 
     
     # display data in app
@@ -216,8 +217,7 @@ def main():
     link = df_brug.loc[df_brug['id']==bridge_id].link.to_list()
     st.sidebar.image(link[0])
     st.sidebar.metric('vaartuigen', df.shape[0])
-        
-    st.dataframe(df)
+      
     display_pod_data(df, bridge_id, jaar)
     MaakKaart(gdf_vaarwegen, df_brug)
     

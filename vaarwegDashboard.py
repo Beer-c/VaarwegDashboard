@@ -39,7 +39,11 @@ def display_groepeer():
 
 def display_stack():
     stack = st.sidebar.radio('Kolommen',['stapelen','naast elkaar'])
-    return stack
+    return (stack=='stapelen')
+
+def display_tabel(): 
+    tabel = st.sidebar.radio('tabel',['ja','nee'])
+    return (tabel=='ja')
 
 def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     
@@ -85,7 +89,8 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack):
     st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
     df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
     df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
-    st.write(df_totaal)
+    if tabel:
+        st.write(df_totaal)
 
 def pod_kleur(val):
     color = 'green' if int(val) else 'red'
@@ -178,7 +183,8 @@ def main():
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
     groepeer               = display_groepeer()
-    stack                 =  True      # gebruik display_stack() om te kunnen kiezen tussen stapelen en naast elkaar
+    tabel                  = display_tabel()
+    stack                  =  True      # gebruik display_stack() om te kunnen kiezen tussen stapelen en naast elkaar
                 
     # maak de selectie van metingen
     df = df_counts[(df_counts['bridge_id']==bridge_id) & (df_counts.index.year==jaar)]

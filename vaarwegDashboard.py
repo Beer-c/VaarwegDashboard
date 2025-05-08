@@ -56,7 +56,7 @@ def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     #st.write(df_group)
     st.bar_chart(df_group, x= Xas, y= 'count', y_label= 'totaal aantal schepen', color = Zas, stack=stack)
     
-def display_grafiek_gem(df, Xas, vaart, Zas, stack):
+def display_grafiek_gem(df, Xas, vaart, Zas, stack, tabel):
            
     # selecteer de waarnemingen in de goedgekeurde weken
     df = df[df.vaart==vaart]
@@ -214,7 +214,7 @@ def main():
         st.caption('beroepsvaart werkdaggemiddelde')
         display_grafiek_gem(df_wd, t_interval, 'B', groepeer, stack)
         st.caption('beroepsvaart weekendggemiddelde')
-        display_grafiek_gem(df_wk, t_interval, 'B', groepeer, stack)
+        display_grafiek_gem(df_wk, t_interval, 'B', groepeer, stack, tabel)
     
     with col2:
         display_metrics('jaar', jaar)
@@ -223,7 +223,7 @@ def main():
         st.caption('recreatievaart werkdaggemiddelde')
         display_grafiek_gem(df_wd, t_interval, 'R', groepeer, stack)
         st.caption('recreatievaart weekendgemiddelde')
-        display_grafiek_gem(df_wk, t_interval, 'R', groepeer, stack)
+        display_grafiek_gem(df_wk, t_interval, 'R', groepeer, stack, tabel)
         
             
     link = df_brug.loc[df_brug['id']==bridge_id].link.to_list()

@@ -39,7 +39,7 @@ def display_groepeer():
 
 def display_stack():
     stack = st.sidebar.radio('Kolommen',['stapelen','naast elkaar'])
-    return True # gebruik 'stack' om te kiezen tussen stapelen en naast elkaar
+    return stack
 
 def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     
@@ -178,9 +178,8 @@ def main():
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
     groepeer               = display_groepeer()
-    #stack                 = display_stack()
-    stack                  = 'stapelen'
-            
+    stack                 =  True      # gebruik display_stack() om te kunnen kiezen tussen stapelen en naast elkaar
+                
     # maak de selectie van metingen
     df = df_counts[(df_counts['bridge_id']==bridge_id) & (df_counts.index.year==jaar)]
     aantal_pods = len(df.pod.unique())

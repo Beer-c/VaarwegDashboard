@@ -182,7 +182,7 @@ def main():
     # display filters in sidebar
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
-    # groepeer              = display_groepeer()
+    groepeer               = False # gebruik display_groepeer() om te kiezen tussen totalen per dagdeel of geen
     tabel                  = display_tabel()
     stack                  =  True      # gebruik display_stack() om te kunnen kiezen tussen stapelen en naast elkaar
                 

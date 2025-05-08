@@ -84,14 +84,12 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack, ToonTabel):
         df_seizoen = pd.DataFrame({'gem': df_totaal.groupby(['seizoen','dagsoort'])['gem'].mean().astype(int)})
         df_totaal= df_seizoen.reset_index(level=['seizoen','dagsoort'])
         
-              
-    df_totaal = legenda (df_totaal)
-    st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
-    df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
-    df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
-    
-if ToonTabel=='ja':
-    st.write(df_totaal) 
+    if ToonTabel =='ja':          
+        df_totaal = legenda (df_totaal)
+        st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
+        df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
+        df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
+        st.write(df_totaal) 
 
 def pod_kleur(val):
     color = 'green' if int(val) else 'red'

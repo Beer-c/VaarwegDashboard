@@ -56,7 +56,7 @@ def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     #st.write(df_group)
     st.bar_chart(df_group, x= Xas, y= 'count', y_label= 'totaal aantal schepen', color = Zas, stack=stack)
     
-def display_grafiek_gem(df, Xas, vaart, Zas, stack, tabel):
+def display_grafiek_gem(df, Xas, vaart, Zas, stack, ToonTabel):
            
     # selecteer de waarnemingen in de goedgekeurde weken
     df = df[df.vaart==vaart]
@@ -89,7 +89,8 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack, tabel):
     st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
     df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
     df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
-    st.write('$$$$$$',tabel)  # df_totaal)
+    
+st.write(df_totaal) if ToonTabel=='ja'
 
 def pod_kleur(val):
     color = 'green' if int(val) else 'red'
@@ -183,7 +184,6 @@ def main():
     jaar, t_interval       = display_tijd_filters()
     groepeer               = None # display_groepeer() 
     tabel                  = display_tabel()
-    st.write ('tabelwaarde is: ',tabel)
     stack                  =  True      # gebruik display_stack() om te kunnen kiezen tussen stapelen en naast elkaar
                 
     # maak de selectie van metingen

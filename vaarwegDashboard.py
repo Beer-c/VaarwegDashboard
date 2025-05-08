@@ -212,7 +212,7 @@ def main():
         # st.caption('beroepsvaart totaal')
         # display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
         st.caption('beroepsvaart werkdaggemiddelde')
-        display_grafiek_gem(df_wd, t_interval, 'B', groepeer, stack)
+        display_grafiek_gem(df_wd, t_interval, 'B', groepeer, stack, tabel)
         st.caption('beroepsvaart weekendggemiddelde')
         display_grafiek_gem(df_wk, t_interval, 'B', groepeer, stack, tabel)
     
@@ -221,7 +221,7 @@ def main():
         # st.caption('recreatievaart totaal')
         # display_grafiek_totaal(df, t_interval, 'R', groepeer, stack)
         st.caption('recreatievaart werkdaggemiddelde')
-        display_grafiek_gem(df_wd, t_interval, 'R', groepeer, stack)
+        display_grafiek_gem(df_wd, t_interval, 'R', groepeer, stack, tabel)
         st.caption('recreatievaart weekendgemiddelde')
         display_grafiek_gem(df_wk, t_interval, 'R', groepeer, stack, tabel)
         

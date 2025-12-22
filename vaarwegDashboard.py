@@ -69,7 +69,7 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack):
     df_totaal = df_totaal.rename(columns={"bridge_id_x": "totaal", "bridge_id_y": "meetdagen"})
     
     # bereken het gemiddelde per maand per WD/WK
-    df_totaal['gem'] = (df_totaal.totaal / df_totaal.meetdagen).round(1) #astype(int)
+    df_totaal['gem'] = (df_totaal.totaal / df_totaal.meetdagen).round(1) #was astype(int), nu round(1)
     df_totaal['maand'] = df_totaal.Timestamp.dt.month
         
     # Voeg het seizoen toe per WD/WK
@@ -78,7 +78,7 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack):
   
     
     if Xas == 'seizoen':
-        df_seizoen = pd.DataFrame({'gem': df_totaal.groupby(['seizoen','dagsoort'])['gem'].mean().astype(int)})
+        df_seizoen = pd.DataFrame({'gem': df_totaal.groupby(['seizoen','dagsoort'])['gem'].mean().round(1)}) # was astype(int), nu round(1)
         df_totaal= df_seizoen.reset_index(level=['seizoen','dagsoort'])
         
               

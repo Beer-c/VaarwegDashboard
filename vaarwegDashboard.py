@@ -118,7 +118,7 @@ def display_pod_data(df, bridge_id, jaar):
                 
             with cols[col]:
                 st.write('boat sense pod: ',pod)
-                st.dataframe(df_kalender.style.map(pod_kleur), height=800)
+                st.dataframe(df_kalender.style.map(pod_kleur), height=1951)
                 
             col+=1
             
@@ -219,8 +219,9 @@ def main():
     st.sidebar.image(link[0])
     st.sidebar.metric('vaartuigen', df.shape[0])
         
-    display_pod_data(df, bridge_id, jaar)
     MaakKaart(gdf_vaarwegen, df_brug)
+    display_pod_data(df, bridge_id, jaar)
+    
     
 # start hoofdprogramma
 seizoen_lijst   = ['1   jan-mrt','2   april-juni','3   juli-aug','4   sept-okt','5   nov-dec']

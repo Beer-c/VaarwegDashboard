@@ -226,7 +226,7 @@ def main():
 seizoen_lijst   = ['1   jan-mrt','2   april-juni','3   juli-aug','4   sept-okt','5   nov-dec']
 maand_lijst     = ['01  januari','02  februari','03  maart','04  april','05  mei','06  juni','07  juli',
                  '08  augustus','09  september','10  oktober','11  november','12  december']
-dagsoort_lijst  = ['weekdag','weekenddag']
+dagsoort_lijst  = ['werkdag','weekenddag']
 dagdeel_lijst   = ['1 Nacht 22-6 uur', '2 Ochtend 6-14 uur','3 Middag 14-22 uur',]
 vaart_lijst     = ['beroepsvaart','recreatievaart']
 richting_lijst  = ['stroomafwaarts','stroomopwaarts']
@@ -244,7 +244,7 @@ gdf_vaarwegen = read_dataframe(path, use_arrow=True)
 path = r'./data/tellingen.parquet'
 df_counts = pd.read_parquet(path)
 
-jaar_lijst =df_counts.index.year.unique().sort()
+jaar_lijst =df_counts.index.year.unique().sort_values()
 
 # bewerk het vaarwegenbestand
 gdf_vaarwegen.crs="EPSG:28992" # bestand heeft RDS coordinaten

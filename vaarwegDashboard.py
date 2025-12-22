@@ -69,7 +69,7 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack):
     df_totaal = df_totaal.rename(columns={"bridge_id_x": "totaal", "bridge_id_y": "meetdagen"})
     
     # bereken het gemiddelde per maand per WD/WK
-    df_totaal['gem'] = (df_totaal.totaal / df_totaal.meetdagen).astype(int)
+    df_totaal['gem'] = (df_totaal.totaal / df_totaal.meetdagen).round(1) #astype(int)
     df_totaal['maand'] = df_totaal.Timestamp.dt.month
         
     # Voeg het seizoen toe per WD/WK
@@ -118,7 +118,7 @@ def display_pod_data(df, bridge_id, jaar):
                 
             with cols[col]:
                 st.write('boat sense pod: ',pod)
-                st.dataframe(df_kalender.style.map(pod_kleur), height=1951)
+                st.dataframe(df_kalender.style.map(pod_kleur), height=1860)
                 
             col+=1
             

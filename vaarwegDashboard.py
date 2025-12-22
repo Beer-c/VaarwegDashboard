@@ -2,7 +2,7 @@
 """
 Created on Fri Oct  4 09:08:52 2024
 
-Dashboard vaartuigtellingen
+Dashboard vaarwegtellingen
 
 @author: Berend Feddes PZH
 """
@@ -16,8 +16,9 @@ from streamlit_folium import st_folium
 import numpy as np
 
 
-APP_TITLE = 'Vaartuigtellingen 2022 - 2025'
+APP_TITLE = 'Vaarwegtellingen'
 APP_SUBTITLE = 'Provincie Zuid-Holland'
+APP_TEXT = 'Bij verschillende bruggen zijn in de periode 2022-2025 vaartuigtellingen uitgevoerd als onderdeel van een pilot. Van deze metingen zijn hier de gemiddelden berekend, per maand en per seizoen. Het onderscheid tussen beroeps en recreatievaart is alleen gebaseerd op de lengte van het schip (langer of korter dan 37m) en is dus een benadering. Omdat de pilot een experimenteel karakter had is de data (soms) sterk gefragmenteerd. In het algemeen mag worden uitgegaan van een lichte onderschatting van het aantal passages (orde grootte 10%).'
 
 def display_metrics(label, value):
     st.metric(label=label+": ", value=value)
@@ -28,22 +29,18 @@ def display_brug(df_brug):
     return int(bridge_id), bridge_name
     
 def display_tijd_filters():
-    jaar = st.sidebar.selectbox('Jaar', [2022, 2023, 2024, 2025])
+    jaar = st.sidebar.selectbox('Jaar', jaar_lijst,len(jaar_lijst)-1)
     t_interval = st.sidebar.radio('Periode',['maand','seizoen'])
     return jaar, t_interval
 
 def display_groepeer():
-    groepeer = st.sidebar.radio('Groepeer totalen bij',['dagdeel','geen'])
+    groepeer = st.sidebar.radio('Groepeer totalen bij',['dagsoort','dagdeel','geen'])
     groepeer = None if groepeer=='geen' else groepeer
     return groepeer
 
 def display_stack():
     stack = st.sidebar.radio('Kolommen',['stapelen','naast elkaar'])
     return (stack=='stapelen')
-
-def display_tabel(): 
-    tabel = st.sidebar.radio('Tabel',['ja','nee'])
-    return tabel
 
 def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     
@@ -56,7 +53,7 @@ def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     #st.write(df_group)
     st.bar_chart(df_group, x= Xas, y= 'count', y_label= 'totaal aantal schepen', color = Zas, stack=stack)
     
-def display_grafiek_gem(df, Xas, vaart, Zas, stack, ToonTabel):
+def display_grafiek_gem(df, Xas, vaart, Zas, stack):
            
     # selecteer de waarnemingen in de goedgekeurde weken
     df = df[df.vaart==vaart]
@@ -83,15 +80,13 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack, ToonTabel):
     if Xas == 'seizoen':
         df_seizoen = pd.DataFrame({'gem': df_totaal.groupby(['seizoen','dagsoort'])['gem'].mean().astype(int)})
         df_totaal= df_seizoen.reset_index(level=['seizoen','dagsoort'])
-
-    # plot de grafiek
+        
+              
     df_totaal = legenda (df_totaal)
     st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
     df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
     df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
-    
-    if ToonTabel =='ja':          
-        st.write(df_totaal) 
+    st.write(df_totaal)
 
 def pod_kleur(val):
     color = 'green' if int(val) else 'red'
@@ -179,14 +174,14 @@ def main():
     st.set_page_config(APP_TITLE, layout='wide')
     st.title(APP_TITLE)
     st.caption(APP_SUBTITLE)
+    st.text(APP_TEXT)
     
     # display filters in sidebar
     bridge_id, bridge_name = display_brug(df_brug)
     jaar, t_interval       = display_tijd_filters()
-    groepeer               = None # display_groepeer() 
-    tabel                  = display_tabel()
-    stack                  =  True      # gebruik display_stack() om te kunnen kiezen tussen stapelen en naast elkaar
-                
+    groepeer               = display_groepeer()
+    stack                  = display_stack()
+            
     # maak de selectie van metingen
     df = df_counts[(df_counts['bridge_id']==bridge_id) & (df_counts.index.year==jaar)]
     aantal_pods = len(df.pod.unique())
@@ -203,34 +198,27 @@ def main():
     
     # selecteer de waarnemingen in de goedgekeurde weken
     df = df[df.index.isocalendar().week.isin(weken_lijst)]
-    df_wd = df.loc[df['dagsoort'] == 'WD']
-    df_wk = df.loc[df['dagsoort'] == 'WK']
-            
+
+    
     # display data in app
     col1, col2 = st.columns(2)
     with col1:
         display_metrics('brug', bridge_name)
-        # st.caption('beroepsvaart totaal')
-        # display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
-        st.caption('beroepsvaart werkdaggemiddelde')
-        display_grafiek_gem(df_wd, t_interval, 'B', groepeer, stack, tabel)
-        st.caption('beroepsvaart weekendggemiddelde')
-        display_grafiek_gem(df_wk, t_interval, 'B', groepeer, stack, tabel)
-    
+        st.caption('beroepsvaart totaal')
+        display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
+        st.caption('beroepsvaart daggemiddelde')
+        display_grafiek_gem(df, t_interval, 'B', groepeer, stack)
     with col2:
         display_metrics('jaar', jaar)
-        # st.caption('recreatievaart totaal')
-        # display_grafiek_totaal(df, t_interval, 'R', groepeer, stack)
-        st.caption('recreatievaart werkdaggemiddelde')
-        display_grafiek_gem(df_wd, t_interval, 'R', groepeer, stack, tabel)
-        st.caption('recreatievaart weekendgemiddelde')
-        display_grafiek_gem(df_wk, t_interval, 'R', groepeer, stack, tabel)
-        
+        st.caption('recreatievaart totaal')
+        display_grafiek_totaal(df, t_interval, 'R', groepeer, stack)
+        st.caption('recreatievaart daggemiddelde')
+        display_grafiek_gem(df, t_interval, 'R', groepeer, stack)
             
     link = df_brug.loc[df_brug['id']==bridge_id].link.to_list()
     st.sidebar.image(link[0])
     st.sidebar.metric('vaartuigen', df.shape[0])
-      
+        
     display_pod_data(df, bridge_id, jaar)
     MaakKaart(gdf_vaarwegen, df_brug)
     
@@ -238,7 +226,7 @@ def main():
 seizoen_lijst   = ['1   jan-mrt','2   april-juni','3   juli-aug','4   sept-okt','5   nov-dec']
 maand_lijst     = ['01  januari','02  februari','03  maart','04  april','05  mei','06  juni','07  juli',
                  '08  augustus','09  september','10  oktober','11  november','12  december']
-dagsoort_lijst  = ['weekdag','weekenddag']
+dagsoort_lijst  = ['werkdag','weekenddag']
 dagdeel_lijst   = ['1 Nacht 22-6 uur', '2 Ochtend 6-14 uur','3 Middag 14-22 uur',]
 vaart_lijst     = ['beroepsvaart','recreatievaart']
 richting_lijst  = ['stroomafwaarts','stroomopwaarts']
@@ -256,7 +244,7 @@ gdf_vaarwegen = read_dataframe(path, use_arrow=True)
 path = r'./data/tellingen.parquet'
 df_counts = pd.read_parquet(path)
 
-jaar_lijst =df_counts.index.year.unique()
+jaar_lijst =df_counts.index.year.unique().sort()
 
 # bewerk het vaarwegenbestand
 gdf_vaarwegen.crs="EPSG:28992" # bestand heeft RDS coordinaten

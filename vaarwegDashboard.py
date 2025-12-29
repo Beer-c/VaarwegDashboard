@@ -24,7 +24,7 @@ def kalender(jaar):
     start_date = date(jaar, 1, 1)
     end_date   = date(jaar, 12, 31)
 
-def kalenderTabel(df_totaal):
+def kalenderTabel(df_totaal, jaar):
     df_kalender = kalender(jaar)
     df_kalender['maandnr'] = df_kalender.index
     df_totaal['maandnr'] = df_totaal.index
@@ -76,7 +76,7 @@ def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     #st.write(df_group)
     st.bar_chart(df_group, x= Xas, y= 'count', y_label= 'totaal aantal schepen', color = Zas, stack=stack)
     
-def display_grafiek_gem(df, Xas, vaart, Zas, stack):
+def display_grafiek_gem(df, jaar, Xas, vaart, Zas, stack):
            
     # selecteer de waarnemingen in de goedgekeurde weken
     df = df[df.vaart==vaart]
@@ -108,7 +108,7 @@ def display_grafiek_gem(df, Xas, vaart, Zas, stack):
         df_totaal= df_seizoen.reset_index(level=['seizoen','dagsoort'])
 
     if Xas == 'maand':    
-        df_totaal = kalenderTabel(df_totaal)          
+        df_totaal = kalenderTabel(df_totaal, jaar)          
         #df_totaal = legenda (df_totaal)
         st.bar_chart(df_totaal, x= Xas, y= 'gem/dag', y_label= ' gem aantal schepen per dag', color= 'dagsoort',stack=stack)
         df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
@@ -234,7 +234,7 @@ def main():
         st.caption('beroepsvaart totaal')
         display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
         st.caption('beroepsvaart daggemiddelde')
-        display_grafiek_gem(df, t_interval, 'B', groepeer, stack)
+        display_grafiek_gem(df, jaar, t_interval, 'B', groepeer, stack)
     with col2:
         display_metrics('jaar', jaar)
         st.caption('recreatievaart totaal')

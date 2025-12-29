@@ -24,6 +24,14 @@ def kalender(jaar):
     start_date = date(jaar, 1, 1)
     end_date   = date(jaar, 12, 31)
 
+    df_index = pd.date_range(start_date, end_date, freq='D')
+    df =pd.DataFrame(columns = ['maand','weekdag','dagsoort'], index = df_index)
+    df['maand'] = df_index.month
+    df['weekdag']= df_index.weekday
+    df['dagsoort'] = np.select([df.weekdag<5],['WD'],'WK')
+    return df.groupby(['maand','dagsoort']).size().reset_index(level=[1]).rename(columns={0:'#dagen'})
+        
+
 def kalenderTabel(df_totaal, jaar):
     df_kalender = kalender(jaar)
     df_kalender['maandnr'] = df_kalender.index

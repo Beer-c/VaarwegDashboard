@@ -238,7 +238,7 @@ def main():
     with col2:
         display_metrics('jaar', jaar)
         st.caption('recreatievaart totaal')
-        display_grafiek_totaal(df, t_interval, 'R', groepeer, stack)
+        display_grafiek_totaal(df, jaar, t_interval, 'R', groepeer, stack)
         st.caption('recreatievaart daggemiddelde')
         display_grafiek_gem(df, t_interval, 'R', groepeer, stack)
             

@@ -20,37 +20,6 @@ APP_TITLE = 'Vaarwegtellingen'
 APP_SUBTITLE = 'Provincie Zuid-Holland'
 APP_TEXT = 'Bij verschillende bruggen zijn in de periode 2022-2025 vaartuigtellingen uitgevoerd als onderdeel van een pilot. Van deze metingen zijn hier de gemiddelden berekend, per maand en per seizoen. Het onderscheid tussen beroeps en recreatievaart is alleen gebaseerd op de lengte van het schip (langer of korter dan 37m) en is dus een benadering. Omdat de pilot een experimenteel karakter had is de data (soms) sterk gefragmenteerd. In het algemeen mag worden uitgegaan van een lichte onderschatting van het aantal passages (orde grootte 10%).'
 
-def kalender(jaar):
-    start_date = date(jaar, 1, 1)
-    end_date   = date(jaar, 12, 31)
-
-    df_index = pd.date_range(start_date, end_date, freq='D')
-    df =pd.DataFrame(columns = ['maand','weekdag','dagsoort'], index = df_index)
-    df['maand'] = df_index.month
-    df['weekdag']= df_index.weekday
-    df['dagsoort'] = np.select([df.weekdag<5],['WD'],'WK')
-    return df.groupby(['maand','dagsoort']).size().reset_index(level=[1]).rename(columns={0:'#dagen'})
-        
-
-def kalenderTabel(df_totaal, jaar):
-    df_kalender = kalender(jaar)
-    df_kalender['maandnr'] = df_kalender.index
-    df_totaal['maandnr'] = df_totaal.index
-    df_meetres= df_kalender.merge(df_totaal, how = 'left', left_on=['dagsoort','maandnr'],
-    right_on=['dagsoort','maandnr']).fillna(0)
-    df_meetres = df_meetres.rename(columns={"maandnr": "maand"})
-    df_meetres['meetdagen %'] = (df_meetres['meetdagen']/df_meetres['#dagen']*100).round(1)
-    df_meetres[['meetdagen','meetdagen %','totaal']]= df_meetres[['meetdagen','meetdagen %','totaal']].astype(int)
-    df_meetres = df_meetres [['maand','dagsoort','#dagen','meetdagen','meetdagen %','totaal','gem/dag']]
-    return df_meetres    
-    
-    df_index = pd.date_range(start_date, end_date, freq='D')
-    df =pd.DataFrame(columns = ['maand','weekdag','dagsoort'], index = df_index)
-    df['maand'] = df_index.month
-    df['weekdag']= df_index.weekday
-    df['dagsoort'] = np.select([df.weekdag<5],['WD'],'WK')
-    return df.groupby(['maand','dagsoort']).size().reset_index(level=[1]).rename(columns={0:'#dagen'})
-      
 def display_metrics(label, value):
     st.metric(label=label+": ", value=value)
     
@@ -84,7 +53,7 @@ def display_grafiek_totaal(df, Xas, vaart, Zas, stack):
     #st.write(df_group)
     st.bar_chart(df_group, x= Xas, y= 'count', y_label= 'totaal aantal schepen', color = Zas, stack=stack)
     
-def display_grafiek_gem(df, jaar, Xas, vaart, Zas, stack):
+def display_grafiek_gem(df, Xas, vaart, Zas, stack):
            
     # selecteer de waarnemingen in de goedgekeurde weken
     df = df[df.vaart==vaart]
@@ -100,28 +69,28 @@ def display_grafiek_gem(df, jaar, Xas, vaart, Zas, stack):
     df_totaal = df_totaal.rename(columns={"bridge_id_x": "totaal", "bridge_id_y": "meetdagen"})
     
     # bereken het gemiddelde per maand per WD/WK
-    df_totaal['gem/dag'] = (df_totaal.totaal / df_totaal.meetdagen).round(1) 
+    df_totaal['gem'] = (df_totaal.totaal / df_totaal.meetdagen).round(1) 
     df_totaal['maand'] = df_totaal.Timestamp.dt.month
         
     # Voeg het seizoen toe per WD/WK
     df_totaal['seizoen'] = df_totaal['maand']
     df_totaal['seizoen'] = df_totaal['seizoen'].replace([1,2,3,4,5,6,7,8,9,10,11,12], [0,0,0,1,1,1,2,2,3,3,4,4])
-      
+  
+    
     if Xas == 'seizoen':
         #df_seizoen = pd.DataFrame({'gem': df_totaal.groupby(['seizoen','dagsoort'])['gem'].mean().round(1)}) 
         df_seizoen = pd.DataFrame({'meetdagen': df_totaal.groupby(['seizoen','dagsoort'])['meetdagen'].sum(),
                                    'totaal': df_totaal.groupby(['seizoen','dagsoort'])['totaal'].sum(),
-                                   'gem/dag': df_totaal.groupby(['seizoen','dagsoort'])['gem/dag'].mean().round(1)
+                                   'gem': df_totaal.groupby(['seizoen','dagsoort'])['gem'].mean().round(1)
                                    })
         df_totaal= df_seizoen.reset_index(level=['seizoen','dagsoort'])
-
-    if Xas == 'maand':    
-        df_totaal = kalenderTabel(df_totaal, jaar)          
-        #df_totaal = legenda (df_totaal)
-        st.bar_chart(df_totaal, x= Xas, y= 'gem/dag', y_label= ' gem aantal schepen per dag', color= 'dagsoort',stack=stack)
-        df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
-        df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
-        st.write(df_totaal)
+        
+              
+    df_totaal = legenda (df_totaal)
+    st.bar_chart(df_totaal, x= Xas, y= 'gem', y_label= ' gem aantal schepen per dag', color= 'dagsoort', stack=stack)
+    df_totaal.index = df_totaal.maand if (Xas == 'maand') else df_totaal.seizoen
+    df_totaal = df_totaal.drop(columns=['Timestamp','maand','seizoen']) if Xas == ('maand') else df_totaal.drop(columns=['seizoen'])
+    st.write(df_totaal)
 
 def pod_kleur(val):
     color = 'green' if int(val) else 'red'
@@ -242,7 +211,7 @@ def main():
         st.caption('beroepsvaart totaal')
         display_grafiek_totaal(df, t_interval, 'B', groepeer, stack)
         st.caption('beroepsvaart daggemiddelde')
-        display_grafiek_gem(df, jaar, t_interval, 'B', groepeer, stack)
+        display_grafiek_gem(df, t_interval, 'B', groepeer, stack)
     with col2:
         display_metrics('jaar', jaar)
         st.caption('recreatievaart totaal')
